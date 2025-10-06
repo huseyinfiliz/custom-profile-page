@@ -1,7 +1,21 @@
 huseyinfiliz-custom-profile-page:
-  # For more details on the format
-  # Checkout https://docs.flarum.org/extend/i18n/#appendix-a-standard-key-format
   admin:
-    my_cool_key: My Cool Key
+    settings:
+      title: Custom Profile Page Settings
+      tab_icon_label: Tab Icon (Font Awesome class)
+      tab_title_label: Tab Title
+      content_format_label: Content Format
+      content_format_html: HTML
+      content_format_markdown: Markdown
+      content_format_text: Plain Text
 
   forum:
+    user_controls:
+      edit_custom_page_button: Edit Custom Page
+    
+    custom_page:
+      empty_text: No content yet. Click "Edit Custom Page" to add content.
+      save_button: Save
+      cancel_button: Cancel
+      title: Edit Custom Page
+      content_placeholder: Write your content here...
