@@ -1,149 +1,221 @@
-import app from 'flarum/forum/app';
 import UserPage from 'flarum/forum/components/UserPage';
+import app from 'flarum/forum/app';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import Button from 'flarum/common/components/Button';
 import EditCustomPageModal from '../components/EditCustomPageModal';
 
 export default class CustomProfilePage extends UserPage {
-    loading: boolean = false;
-    customPage: any = null;
+    loading: boolean = true;
     error: string | null = null;
+    customPage: any = null;
+    permissionDenied: boolean = false;
 
     oninit(vnode) {
         super.oninit(vnode);
+
         this.loading = true;
-        this.loadUser(this.attrs.username);
-        
-        // Debug
-        console.log('CustomProfilePage initialized', this.attrs);
+        this.error = null;
+        this.customPage = null;
+        this.permissionDenied = false;
+
+        this.loadUser(m.route.param('username'));
+    }
+
+    show(user) {
+        super.show(user);
+        this.loadCustomPage();
     }
 
     oncreate(vnode) {
         super.oncreate(vnode);
+        this.processMediaLinks();
+    }
+
+    onupdate(vnode) {
+        super.onupdate(vnode);
+        this.processMediaLinks();
+    }
+
+    // ✅ YouTube ve diğer media linklerini iframe'e çevir
+    processMediaLinks() {
+        // ✅ Admin ayarını kontrol et
+        const enableMediaEmbeds = app.forum.attribute('huseyinfiliz-custom-profile-page.enable_media_embeds');
         
-        // User yüklendikten sonra custom page'i yükle
-        if (this.user) {
-            this.loadCustomPage();
-        } else {
-            // User henüz yüklenmemişse bekle
-            setTimeout(() => {
-                if (this.user) {
-                    this.loadCustomPage();
-                }
-            }, 100);
+        if (!enableMediaEmbeds) {
+            return; // Embed kapalıysa hiçbir şey yapma
         }
+
+        setTimeout(() => {
+            const content = this.element?.querySelector('.CustomProfilePage-content');
+            if (!content) return;
+
+            // YouTube linklerini bul ve iframe'e çevir
+            const links = content.querySelectorAll('a[href*="youtube.com"], a[href*="youtu.be"]');
+            
+            links.forEach((link) => {
+                // Zaten işlenmiş mi kontrol et
+                if (link.classList.contains('media-processed')) return;
+                
+                const url = link.getAttribute('href');
+                if (!url) return;
+
+                // YouTube video ID'sini çıkar
+                let videoId = null;
+                
+                // youtube.com/watch?v=VIDEO_ID
+                const match1 = url.match(/[?&]v=([^&]+)/);
+                if (match1) videoId = match1[1];
+                
+                // youtu.be/VIDEO_ID
+                const match2 = url.match(/youtu\.be\/([^?]+)/);
+                if (match2) videoId = match2[1];
+
+                if (videoId) {
+                    // Iframe oluştur
+                    const iframe = document.createElement('iframe');
+                    iframe.src = `https://www.youtube.com/embed/${videoId}`;
+                    iframe.width = '560';
+                    iframe.height = '315';
+                    iframe.frameBorder = '0';
+                    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+                    iframe.allowFullscreen = true;
+                    iframe.style.maxWidth = '100%';
+                    iframe.style.marginTop = '10px';
+                    iframe.style.marginBottom = '10px';
+
+                    // Link'in parent'ını bul ve iframe'i ekle
+                    const parent = link.parentElement;
+                    if (parent) {
+                        parent.appendChild(iframe);
+                        link.classList.add('media-processed');
+                        link.style.display = 'none'; // Link'i gizle
+                    }
+                }
+            });
+        }, 100);
     }
 
     content() {
-        // User kontrolü
-        if (!this.user) {
-            console.log('Waiting for user...');
-            return m('.CustomProfilePage', m(LoadingIndicator));
-        }
-
         if (this.loading) {
-            return m('.CustomProfilePage', [
-                m('h2', this.user.displayName() + "'s Custom Page"),
-                m(LoadingIndicator)
-            ]);
+            return <LoadingIndicator />;
         }
 
-        if (this.error) {
-            return m('.CustomProfilePage', 
-                m('.Alert.Alert--error', this.error)
+        if (this.permissionDenied) {
+            return (
+                <div className="CustomProfilePage">
+                    <div className="Placeholder">
+                        <p>{app.translator.trans('huseyinfiliz-custom-profile-page.forum.errors.permission_denied')}</p>
+                    </div>
+                </div>
             );
         }
 
-        const canEdit = app.session.user?.id() === this.user.id() && 
-                       app.forum.attribute('canEditOwnCustomPage');
-        const content = this.customPage?.content();
-        const format = app.forum.attribute('huseyinfiliz-custom-profile-page.content_format') || 'markdown';
+        if (this.error) {
+            return (
+                <div className="CustomProfilePage">
+                    <div className="Placeholder">
+                        <p>{this.error}</p>
+                    </div>
+                </div>
+            );
+        }
 
-        console.log('Rendering content', { content, format, canEdit });
+        const currentUser = app.session.user;
+        
+        if (!currentUser) {
+            const contentHtml = this.customPage?.attribute('contentHtml') || '';
+            
+            return (
+                <div className="CustomProfilePage">
+                    <div className="CustomProfilePage-content Post-body">
+                        {contentHtml ? m.trust(contentHtml) : this.renderEmpty(false)}
+                    </div>
+                </div>
+            );
+        }
 
-        return m('.CustomProfilePage', [
-            canEdit && m('.CustomProfilePage-actions',
-                m(Button, {
-                    className: 'Button Button--primary',
-                    icon: 'fas fa-edit',
-                    onclick: () => {
-                        console.log('Opening edit modal');
-                        app.modal.show(EditCustomPageModal, {
-                            user: this.user,
-                            customPage: this.customPage,
-                            onSave: () => {
-                                console.log('Modal saved, reloading');
-                                this.loadCustomPage();
-                            }
-                        });
-                    }
-                }, app.translator.trans('huseyinfiliz-custom-profile-page.forum.profile_tab.edit_button'))
-            ),
+        const isModerator = app.forum.attribute('canModerateCustomPage');
+        const isOwnPage = currentUser.id() === this.user?.id();
+        const canEditOwn = app.forum.attribute('canEditOwnCustomPage');
+        
+        const canEdit = isModerator || (isOwnPage && canEditOwn);
 
-            m('.CustomProfilePage-content',
-                content ? this.renderContent(content, format) : this.renderEmpty(canEdit)
-            )
-        ]);
+        const contentHtml = this.customPage?.attribute('contentHtml') || '';
+
+        return (
+            <div className="CustomProfilePage">
+                <div className="CustomProfilePage-header">
+                    {canEdit && (
+                        <Button
+                            className="Button Button--primary"
+                            icon="fas fa-edit"
+                            onclick={() => {
+                                app.modal.show(EditCustomPageModal, {
+                                    user: this.user,
+                                    customPage: this.customPage,
+                                    onSave: (page) => {
+                                        this.customPage = page;
+                                        m.redraw();
+                                    }
+                                });
+                            }}
+                        >
+                            {app.translator.trans('huseyinfiliz-custom-profile-page.forum.profile_tab.edit_button')}
+                        </Button>
+                    )}
+                </div>
+                <div className="CustomProfilePage-content Post-body">
+                    {contentHtml ? m.trust(contentHtml) : this.renderEmpty(canEdit)}
+                </div>
+            </div>
+        );
     }
 
     loadCustomPage() {
         if (!this.user) {
-            console.log('No user yet, waiting...');
             setTimeout(() => this.loadCustomPage(), 100);
             return;
         }
 
         this.loading = true;
         this.error = null;
-
-        console.log('Loading custom page for user:', this.user.id());
+        this.permissionDenied = false;
+        this.customPage = null;
 
         app.request({
             method: 'GET',
             url: app.forum.attribute('apiUrl') + '/users/' + this.user.id() + '/custom-page',
         })
         .then((response) => {
-            console.log('Custom page loaded:', response);
             if (response.data) {
                 this.customPage = app.store.pushPayload(response);
             }
-            this.loading = false;
-            m.redraw();
         })
         .catch((error) => {
-            console.error('Custom page load error:', error);
-            if (error.status === 404) {
-                console.log('No custom page yet (404)');
+            if (error.status === 403) {
+                this.permissionDenied = true;
+            } else if (error.status === 404) {
                 this.customPage = null;
             } else {
-                console.error('Real error:', error);
-                this.error = 'Failed to load custom page';
+                this.error = app.translator.trans('huseyinfiliz-custom-profile-page.forum.errors.load_failed');
             }
+        })
+        .finally(() => {
             this.loading = false;
             m.redraw();
         });
     }
 
-    renderContent(text, format) {
-        if (format === 'html') {
-            return m.trust(text);
-        }
-        
-        if (format === 'markdown') {
-            const html = text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br>');
-            return m.trust(html);
-        }
-        
-        return m('pre', text);
-    }
-
     renderEmpty(canEdit) {
-        return m('.CustomProfilePage-empty', [
-            m('p', app.translator.trans('huseyinfiliz-custom-profile-page.forum.profile_tab.empty')),
-            canEdit && m('p.help-text', 'Click "Edit" to create your custom page')
-        ]);
+        return (
+            <div className="Placeholder">
+                <p>
+                    {canEdit 
+                        ? app.translator.trans('huseyinfiliz-custom-profile-page.forum.profile_tab.empty_own')
+                        : app.translator.trans('huseyinfiliz-custom-profile-page.forum.profile_tab.empty_other')
+                    }
+                </p>
+            </div>
+        );
     }
 }

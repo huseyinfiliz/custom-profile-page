@@ -17,6 +17,14 @@ app.initializers.add('huseyinfiliz/custom-profile-page', () => {
       help: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.tab_icon_help'),
     })
     .registerSetting({
+      setting: 'huseyinfiliz-custom-profile-page.url_slug',
+      label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.url_slug'),
+      type: 'text',
+      placeholder: 'customPage',
+      default: 'customPage',
+      help: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.url_slug_help'),
+    })
+    .registerSetting({
       setting: 'huseyinfiliz-custom-profile-page.content_format',
       label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.content_format'),
       type: 'select',
@@ -27,22 +35,47 @@ app.initializers.add('huseyinfiliz/custom-profile-page', () => {
       },
       default: 'markdown',
     })
+    .registerSetting({
+      setting: 'huseyinfiliz-custom-profile-page.allowed_html_tags',
+      label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.allowed_html_tags'),
+      type: 'text',
+      placeholder: 'b,i,u,strong,em,a,br,p,ul,ol,li,blockquote,code,pre',
+      help: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.allowed_html_tags_help'),
+    })
+    // ✅ YENİ - Media Embeds ayarı
+    .registerSetting({
+      setting: 'huseyinfiliz-custom-profile-page.enable_media_embeds',
+      label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.enable_media_embeds'),
+      type: 'boolean',
+      help: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.enable_media_embeds_help'),
+      default: true,
+    })
     .registerPermission(
       {
         icon: 'fas fa-edit',
         label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.permissions.edit_own'),
         permission: 'user.editOwnCustomPage',
       },
-      'start',    // ✅ 'start' grup
-      95          // ✅ Priority
+      'start',
+      95
     )
     .registerPermission(
       {
         icon: 'fas fa-eye',
         label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.permissions.view'),
         permission: 'user.viewCustomPage',
+        allowGuest: true
       },
-      'view',     // ✅ 'view' grup
-      95          // ✅ Priority
+      'view',
+      95
+    )
+    .registerPermission(
+      {
+        icon: 'fas fa-user-shield',
+        label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.permissions.moderate'),
+        permission: 'user.moderateCustomPage',
+      },
+      'moderate',
+      95
     );
 });

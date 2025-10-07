@@ -5,6 +5,7 @@ namespace HuseyinFiliz\CustomProfilePage\Api\Controller;
 use Flarum\Api\Controller\AbstractCreateController;
 use Flarum\Http\RequestUtil;
 use Flarum\User\User;
+use Flarum\User\Exception\PermissionDeniedException;
 use HuseyinFiliz\CustomProfilePage\Api\Serializer\CustomProfilePageSerializer;
 use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
 use Illuminate\Support\Arr;
@@ -23,17 +24,22 @@ class CreateCustomPageController extends AbstractCreateController
         // Kullanıcıyı bul
         $user = User::findOrFail($userId);
         
-        // Yetki kontrolü - sadece kendi sayfasını oluşturabilir
-        if ($actor->id != $userId) {
-            throw new \Flarum\User\Exception\PermissionDeniedException();
+        // ✅ Yetki kontrolü
+        $isModerator = $actor->hasPermission('user.moderateCustomPage');
+        $isOwnPage = $actor->id == $userId;
+        $canEditOwn = $actor->hasPermission('user.editOwnCustomPage');
+        
+        // Eğer moderatör değilse ve kendi sayfası değilse
+        if (!$isModerator && !$isOwnPage) {
+            throw new PermissionDeniedException();
         }
         
-        // Edit yetkisi kontrolü
-        if (!$actor->hasPermission('user.editOwnCustomPage')) {
-            throw new \Flarum\User\Exception\PermissionDeniedException();
+        // Eğer kendi sayfası ama edit yetkisi yoksa
+        if ($isOwnPage && !$canEditOwn && !$isModerator) {
+            throw new PermissionDeniedException();
         }
         
-        // Zaten var mı kontrol et
+        // ✅ Zaten var mı kontrol et
         $existingPage = CustomProfilePage::where('user_id', $userId)->first();
         if ($existingPage) {
             throw new \Exception('Custom page already exists. Use PATCH to update.');
@@ -42,7 +48,7 @@ class CreateCustomPageController extends AbstractCreateController
         $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
         $content = Arr::get($attributes, 'content', '');
         
-        // Yeni sayfa oluştur
+        // ✅ Yeni sayfa oluştur
         $page = new CustomProfilePage();
         $page->user_id = $userId;
         $page->content = $content;

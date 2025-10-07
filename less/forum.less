@@ -1,43 +1,133 @@
 .CustomProfilePage {
-  padding: 20px;
+    margin-top: 20px;
 
-  &-actions {
-    margin-bottom: 15px;
-    text-align: right;
-  }
-
-  &-content {
-    background: var(--body-bg);
-    border-radius: 4px;
-    padding: 20px;
-    min-height: 200px;
-
-    pre {
-      background: var(--control-bg);
-      padding: 10px;
-      border-radius: 4px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
+    &-header {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 20px;
     }
 
-    img {
-      max-width: 100%;
-      height: auto;
-    }
-  }
+    &-content {
+        background: var(--control-bg);
+        border-radius: var(--border-radius);
+        padding: 20px;
+        min-height: 200px;
 
-  &-empty {
-    text-align: center;
-    color: var(--muted-color);
-    padding: 60px 20px;
-    font-size: 16px;
-  }
+        // ✅ Flarum'un Post-body stillerini kullan
+        // Post içeriği gibi davransın
+        .Post-body();
+    }
 }
 
+// Modal stilleri
 .EditCustomPageModal {
-  textarea.FormControl {
-    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
-    font-size: 13px;
-    line-height: 1.5;
-  }
+    &-formatInfo {
+        background: var(--control-bg);
+        border-left: 3px solid var(--primary-color);
+        padding: 12px 15px;
+        margin-bottom: 15px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+
+        .icon {
+            font-size: 18px;
+            color: var(--primary-color);
+            flex-shrink: 0;
+        }
+    }
+
+    .MarkdownToolbar {
+        margin-bottom: 10px;
+        padding: 10px;
+        background: var(--control-bg);
+        border-radius: var(--border-radius);
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+
+        .Button {
+            padding: 8px 12px;
+            min-width: 0;
+            transition: background 0.2s;
+
+            &:hover {
+                background: var(--body-bg);
+            }
+
+            i {
+                margin: 0;
+            }
+        }
+    }
+
+    textarea.FormControl {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        resize: vertical;
+        width: 100%;
+        min-height: 400px;
+    }
+
+    &-actions {
+        margin-top: 20px;
+        text-align: right;
+
+        .Button {
+            margin-left: 10px;
+
+            &:first-child {
+                margin-left: 0;
+            }
+        }
+    }
+
+    .Modal-body {
+        padding: 20px;
+    }
+
+    .Form .Form-group {
+        margin-bottom: 15px;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .CustomProfilePage {
+        margin-top: 10px;
+
+        &-content {
+            padding: 15px;
+        }
+    }
+
+    .EditCustomPageModal {
+        .MarkdownToolbar .Button {
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        textarea.FormControl {
+            min-height: 300px;
+            font-size: 12px;
+        }
+
+        &-actions {
+            text-align: center;
+
+            .Button {
+                margin: 5px;
+            }
+        }
+
+        .Modal-body {
+            padding: 15px;
+        }
+    }
 }

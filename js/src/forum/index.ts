@@ -3,9 +3,9 @@ import CustomProfilePage from './models/CustomProfilePage';
 import addUserProfilePage from './addUserProfilePage';
 
 app.initializers.add('huseyinfiliz/custom-profile-page', () => {
-  // Model kaydet
+  // Model'i kaydet
   app.store.models['custom-profile-pages'] = CustomProfilePage;
 
-  // Route ve navigation ekle
+  // User profile page ekle
   addUserProfilePage();
 });
