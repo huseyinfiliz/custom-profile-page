@@ -12,6 +12,7 @@
 namespace HuseyinFiliz\CustomProfilePage;
 
 use Flarum\Api\Serializer\UserSerializer;
+use Flarum\Api\Serializer\ForumSerializer;
 use Flarum\Extend;
 use Flarum\User\User;
 use HuseyinFiliz\CustomProfilePage\Access\CustomProfilePagePolicy;
@@ -56,4 +57,14 @@ return [
     // User Serializer - customPage relationship ekle
     (new Extend\ApiSerializer(UserSerializer::class))
         ->hasOne('customPage', CustomProfilePageSerializer::class),
+	
+	(new Extend\ApiSerializer(ForumSerializer::class))
+    	->attributes(function (ForumSerializer $serializer) {
+        	$actor = $serializer->getActor();
+        
+        	return [
+            	'canEditOwnCustomPage' => $actor->can('editOwnCustomPage'),
+            	'canViewCustomPage' => $actor->can('viewCustomPage'),
+        	];
+    	}),
 ];

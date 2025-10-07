@@ -1,21 +1,29 @@
 huseyinfiliz-custom-profile-page:
   admin:
     settings:
-      title: Custom Profile Page Settings
-      tab_icon_label: Tab Icon (Font Awesome class)
-      tab_title_label: Tab Title
-      content_format_label: Content Format
-      content_format_html: HTML
-      content_format_markdown: Markdown
-      content_format_text: Plain Text
+      tab_title: Profile Tab Title
+      tab_icon: Tab Icon (FontAwesome class)
+      tab_icon_help: "Example: fas fa-file-alt, fas fa-user, fas fa-star"
+      content_format: Content Format
+      format_markdown: Markdown
+      format_html: HTML
+      format_text: Plain Text
+    
+    permissions:
+      edit_own: Edit own custom profile page
+      view: View custom profile pages
 
   forum:
-    user_controls:
-      edit_custom_page_button: Edit Custom Page
-    
-    custom_page:
-      empty_text: No content yet. Click "Edit Custom Page" to add content.
+    profile_tab:
+      loading: Loading...
+      empty: No content yet. Click "Edit" to add content.
+      edit_button: Edit Page
       save_button: Save
       cancel_button: Cancel
-      title: Edit Custom Page
+      preview_button: Preview
+    
+    edit_modal:
+      title: Edit Custom Profile Page
+      content_label: Content
       content_placeholder: Write your content here...
+      submit_button: Save Changes

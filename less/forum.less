@@ -1,0 +1,43 @@
+.CustomProfilePage {
+  padding: 20px;
+
+  &-actions {
+    margin-bottom: 15px;
+    text-align: right;
+  }
+
+  &-content {
+    background: var(--body-bg);
+    border-radius: 4px;
+    padding: 20px;
+    min-height: 200px;
+
+    pre {
+      background: var(--control-bg);
+      padding: 10px;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+  }
+
+  &-empty {
+    text-align: center;
+    color: var(--muted-color);
+    padding: 60px 20px;
+    font-size: 16px;
+  }
+}
+
+.EditCustomPageModal {
+  textarea.FormControl {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}

@@ -24,11 +24,11 @@
     "extra": {
         "flarum-extension": {
             "title": "Custom Profile Page",
-            "category": "",
+            "category": "feature",
             "icon": {
-                "name": "",
-                "color": "",
-                "backgroundColor": ""
+                "name": "fas fa-user-edit",
+                "backgroundColor": "#3498db",
+                "color": "#fff"
             }
         },
         "flarum-cli": {
