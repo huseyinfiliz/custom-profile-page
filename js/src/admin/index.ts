@@ -33,7 +33,8 @@ app.initializers.add('huseyinfiliz/custom-profile-page', () => {
         label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.permissions.edit_own'),
         permission: 'user.editOwnCustomPage',
       },
-      'start'
+      'start',    // ✅ 'start' grup
+      95          // ✅ Priority
     )
     .registerPermission(
       {
@@ -41,6 +42,7 @@ app.initializers.add('huseyinfiliz/custom-profile-page', () => {
         label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.permissions.view'),
         permission: 'user.viewCustomPage',
       },
-      'view'
+      'view',     // ✅ 'view' grup
+      95          // ✅ Priority
     );
 });
