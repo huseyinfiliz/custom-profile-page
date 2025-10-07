@@ -13,6 +13,7 @@ interface CustomProfilePageTabAttrs extends ComponentAttrs {
 export default class CustomProfilePageTab extends Component<CustomProfilePageTabAttrs> {
   loading: boolean = false;
   customPage: CustomProfilePage | null = null;
+  error: string | null = null;
 
   oninit(vnode: any) {
     super.oninit(vnode);
@@ -21,17 +22,35 @@ export default class CustomProfilePageTab extends Component<CustomProfilePageTab
 
   load() {
     const user = this.attrs.user;
+    if (!user || !user.id()) {
+      this.error = 'User not found';
+      return;
+    }
     
     this.loading = true;
+    this.error = null;
     
-    app.store
-      .find<CustomProfilePage>('custom-profile-pages', user.id()!)
-      .then((page) => {
-        this.customPage = page;
+    // API'den custom page'i getir - endpoint custom-page olmalı
+    app.request({
+      method: 'GET',
+      url: `${app.forum.attribute('apiUrl')}/users/${user.id()}/custom-page`,
+    })
+      .then((response: any) => {
+        // Response'u store'a ekle ve model'e çevir
+        if (response.data) {
+          this.customPage = app.store.pushPayload(response) as CustomProfilePage;
+        }
         this.loading = false;
         m.redraw();
       })
-      .catch(() => {
+      .catch((error: any) => {
+        console.error('Custom page load error:', error);
+        // 404 hatası normaldir (henüz içerik oluşturulmamış)
+        if (error.status === 404) {
+          this.customPage = null;
+        } else {
+          this.error = 'Failed to load custom page';
+        }
         this.loading = false;
         m.redraw();
       });
@@ -42,7 +61,13 @@ export default class CustomProfilePageTab extends Component<CustomProfilePageTab
     const canEdit = app.session.user?.id() === user.id() && app.forum.attribute('canEditOwnCustomPage');
 
     if (this.loading) {
-      return m(LoadingIndicator);
+      return m('.CustomProfilePage', m(LoadingIndicator));
+    }
+
+    if (this.error) {
+      return m('.CustomProfilePage', 
+        m('.Alert.Alert--error', this.error)
+      );
     }
 
     const content = this.customPage?.content();

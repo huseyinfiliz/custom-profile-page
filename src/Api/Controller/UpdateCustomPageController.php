@@ -17,24 +17,33 @@ class UpdateCustomPageController extends AbstractShowController
 
     protected function data(ServerRequestInterface $request, Document $document)
     {
-        $actor = RequestUtil::getActor($request);
         $userId = Arr::get($request->getQueryParams(), 'id');
+        $actor = RequestUtil::getActor($request);
         
+        // Kullanıcıyı bul
         $user = User::findOrFail($userId);
-
-        // Kendi sayfasını düzenleyebilir mi?
-        $actor->assertCan('editOwnCustomPage', $user);
-
-        $page = CustomProfilePage::where('user_id', $userId)->firstOrFail();
-
-        $content = Arr::get($request->getParsedBody(), 'data.attributes.content');
-
-        if ($content !== null) {
-            $page->content = $content;
-            $page->updated_at = now();
-            $page->save();
+        
+        // Yetki kontrolü - sadece kendi sayfasını düzenleyebilir
+        if ($actor->id != $userId) {
+            throw new \Flarum\User\Exception\PermissionDeniedException();
         }
-
+        
+        // Edit yetkisi kontrolü
+        if (!$actor->hasPermission('user.editOwnCustomPage')) {
+            throw new \Flarum\User\Exception\PermissionDeniedException();
+        }
+        
+        // Sayfayı bul
+        $page = CustomProfilePage::where('user_id', $userId)->firstOrFail();
+        
+        $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
+        
+        if (isset($attributes['content'])) {
+            $page->content = $attributes['content'];
+        }
+        
+        $page->save();
+        
         return $page;
     }
 }

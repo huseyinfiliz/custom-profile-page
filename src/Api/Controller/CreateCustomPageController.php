@@ -17,28 +17,37 @@ class CreateCustomPageController extends AbstractCreateController
 
     protected function data(ServerRequestInterface $request, Document $document)
     {
+        $userId = Arr::get($request->getQueryParams(), 'id');
         $actor = RequestUtil::getActor($request);
-        $userId = Arr::get($request->getParsedBody(), 'data.attributes.userId');
         
+        // Kullanıcıyı bul
         $user = User::findOrFail($userId);
-
-        // Kendi sayfasını düzenleyebilir mi?
-        $actor->assertCan('editOwnCustomPage', $user);
-
-        // Zaten sayfa var mı kontrol et
-        $existing = CustomProfilePage::where('user_id', $userId)->first();
-        if ($existing) {
-            throw new \Flarum\User\Exception\PermissionDeniedException('Page already exists');
+        
+        // Yetki kontrolü - sadece kendi sayfasını oluşturabilir
+        if ($actor->id != $userId) {
+            throw new \Flarum\User\Exception\PermissionDeniedException();
         }
-
-        $content = Arr::get($request->getParsedBody(), 'data.attributes.content', '');
-
-        $page = CustomProfilePage::create([
-            'user_id' => $userId,
-            'content' => $content,
-            'updated_at' => now()
-        ]);
-
+        
+        // Edit yetkisi kontrolü
+        if (!$actor->hasPermission('user.editOwnCustomPage')) {
+            throw new \Flarum\User\Exception\PermissionDeniedException();
+        }
+        
+        // Zaten var mı kontrol et
+        $existingPage = CustomProfilePage::where('user_id', $userId)->first();
+        if ($existingPage) {
+            throw new \Exception('Custom page already exists. Use PATCH to update.');
+        }
+        
+        $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
+        $content = Arr::get($attributes, 'content', '');
+        
+        // Yeni sayfa oluştur
+        $page = new CustomProfilePage();
+        $page->user_id = $userId;
+        $page->content = $content;
+        $page->save();
+        
         return $page;
     }
 }
