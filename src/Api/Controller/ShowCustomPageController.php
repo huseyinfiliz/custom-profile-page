@@ -4,7 +4,6 @@ namespace HuseyinFiliz\CustomProfilePage\Api\Controller;
 
 use Flarum\Api\Controller\AbstractShowController;
 use Flarum\Http\RequestUtil;
-use Flarum\User\Exception\PermissionDeniedException;
 use HuseyinFiliz\CustomProfilePage\Api\Serializer\CustomProfilePageSerializer;
 use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
 use Illuminate\Support\Arr;
@@ -20,18 +19,16 @@ class ShowCustomPageController extends AbstractShowController
         $userId = Arr::get($request->getQueryParams(), 'id');
         $actor = RequestUtil::getActor($request);
         
-        // ✅ View yetkisi kontrolü
-        if (!$actor || !$actor->hasPermission('viewCustomPage')) {
-            throw new PermissionDeniedException();
-        }
-        
-        // Sayfayı bul
+        // ✅ Sayfayı bul
         $page = CustomProfilePage::where('user_id', $userId)->first();
         
-        // ✅ Sayfa yoksa boş response dön (404 değil, frontend'de handle edilecek)
+        // Sayfa yoksa null dön
         if (!$page) {
             return null;
         }
+        
+        // ✅ Permission kontrolü - Policy kullan
+        $actor->assertCan('view', $page);
         
         return $page;
     }

@@ -13,12 +13,17 @@ class CustomProfilePagePolicy extends AbstractPolicy
      */
     public function view(?User $actor, CustomProfilePage $page)
     {
-        // Eğer actor yoksa (ziyaretçi) veya izni yoksa
-        if (!$actor || !$actor->hasPermission('viewCustomPage')) {
-            return $this->deny();
+        // ✅ Guest'ler de görebilir
+        if (!$actor) {
+            return $this->allow();
         }
         
-        return $this->allow();
+        // ✅ Permission kontrolü
+        if ($actor->hasPermission('user.viewCustomPage')) {
+            return $this->allow();
+        }
+        
+        return $this->deny();
     }
 
     /**
