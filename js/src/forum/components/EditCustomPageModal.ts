@@ -122,9 +122,6 @@ export default class EditCustomPageModal extends Modal {
       
       // Mention
       this.toolbarButton('Mention', 'fas fa-at', '@', ''),
-      
-      // Emoji
-      this.toolbarButton('Emoji', 'far fa-smile', ':', ':'),
     ]);
   }
 
