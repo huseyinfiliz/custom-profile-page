@@ -42,7 +42,14 @@ app.initializers.add('huseyinfiliz/custom-profile-page', () => {
       placeholder: 'b,i,u,strong,em,a,br,p,ul,ol,li,blockquote,code,pre',
       help: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.allowed_html_tags_help'),
     })
-    // ✅ YENİ - Media Embeds ayarı
+    .registerSetting({
+      setting: 'huseyinfiliz-custom-profile-page.default_template',
+      label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.default_template'),
+      type: 'textarea',
+	  rows: 20,
+      placeholder: '',
+      help: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.default_template_help'),
+    })
     .registerSetting({
       setting: 'huseyinfiliz-custom-profile-page.enable_media_embeds',
       label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.enable_media_embeds'),

@@ -11,7 +11,20 @@ export default class EditCustomPageModal extends Modal {
   oninit(vnode: any) {
     super.oninit(vnode);
     
-    this.contentText = Stream(this.attrs.customPage?.content() || '');
+    // ✅ KEY LOGIC: Eğer customPage yoksa (yeni sayfa) ve
+    // admin'den template varsa, template'i yükle
+    let initialContent = '';
+    
+    if (this.attrs.customPage?.content()) {
+      // Mevcut sayfa varsa, kendi içeriğini kullan
+      initialContent = this.attrs.customPage.content();
+    } else {
+      // Yeni sayfa → admin template'ini yükle
+      const template = app.forum.attribute<string>('huseyinfiliz-custom-profile-page.default_template') || '';
+      initialContent = template;
+    }
+    
+    this.contentText = Stream(initialContent);
   }
 
   className() {

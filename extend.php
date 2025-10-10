@@ -40,6 +40,7 @@ return [
         ->default('huseyinfiliz-custom-profile-page.url_slug', 'customPage')
         ->default('huseyinfiliz-custom-profile-page.content_format', 'markdown')
         ->default('huseyinfiliz-custom-profile-page.allowed_html_tags', 'b,i,u,strong,em,a,br,p,ul,ol,li,blockquote,code,pre')
+		->default('huseyinfiliz-custom-profile-page.default_template', '')
         ->default('huseyinfiliz-custom-profile-page.enable_media_embeds', '1'),
     
     (new Extend\ApiSerializer(UserSerializer::class))
@@ -57,6 +58,7 @@ return [
                 'huseyinfiliz-custom-profile-page.url_slug' => $settings->get('huseyinfiliz-custom-profile-page.url_slug', 'customPage'),
                 'huseyinfiliz-custom-profile-page.content_format' => $settings->get('huseyinfiliz-custom-profile-page.content_format', 'markdown'),
                 'huseyinfiliz-custom-profile-page.allowed_html_tags' => $settings->get('huseyinfiliz-custom-profile-page.allowed_html_tags', 'b,i,u,strong,em,a,br,p,ul,ol,li,blockquote,code,pre'),
+				'huseyinfiliz-custom-profile-page.default_template' => $settings->get('huseyinfiliz-custom-profile-page.default_template', ''),
 				'huseyinfiliz-custom-profile-page.enable_media_embeds' => (bool) $settings->get('huseyinfiliz-custom-profile-page.enable_media_embeds', true),
             ];
             
