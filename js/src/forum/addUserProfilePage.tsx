@@ -48,7 +48,7 @@ export default function addUserProfilePage() {
       'customPageLink',
       LinkButton.component(
         {
-          href: `/u/${user.slug()}/${urlSlug}`,
+          href: app.route('user.customPage', { username: user.slug(), slug: urlSlug }),
           name: 'custompage',
           icon: tabIcon,
         },
