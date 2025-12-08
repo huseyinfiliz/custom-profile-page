@@ -5,7 +5,6 @@ use Flarum\Api\Serializer\UserSerializer;
 use Flarum\Api\Serializer\ForumSerializer;
 use Flarum\Extend;
 use Flarum\User\User;
-use Flarum\Settings\SettingsRepositoryInterface;
 use HuseyinFiliz\CustomProfilePage\Access\CustomProfilePagePolicy;
 use HuseyinFiliz\CustomProfilePage\Api\Controller\CreateCustomPageController;
 use HuseyinFiliz\CustomProfilePage\Api\Controller\ShowCustomPageController;
@@ -40,8 +39,16 @@ return [
         ->default('huseyinfiliz-custom-profile-page.url_slug', 'customPage')
         ->default('huseyinfiliz-custom-profile-page.content_format', 'markdown')
         ->default('huseyinfiliz-custom-profile-page.allowed_html_tags', 'b,i,u,strong,em,a,br,p,ul,ol,li,blockquote,code,pre')
-		->default('huseyinfiliz-custom-profile-page.default_template', '')
-        ->default('huseyinfiliz-custom-profile-page.enable_media_embeds', '1'),
+        ->default('huseyinfiliz-custom-profile-page.default_template', '')
+        ->default('huseyinfiliz-custom-profile-page.enable_media_embeds', '1')
+        
+        ->serializeToForum('huseyinfiliz-custom-profile-page.tab_title', 'huseyinfiliz-custom-profile-page.tab_title')
+        ->serializeToForum('huseyinfiliz-custom-profile-page.tab_icon', 'huseyinfiliz-custom-profile-page.tab_icon')
+        ->serializeToForum('huseyinfiliz-custom-profile-page.url_slug', 'huseyinfiliz-custom-profile-page.url_slug')
+        ->serializeToForum('huseyinfiliz-custom-profile-page.content_format', 'huseyinfiliz-custom-profile-page.content_format')
+        ->serializeToForum('huseyinfiliz-custom-profile-page.allowed_html_tags', 'huseyinfiliz-custom-profile-page.allowed_html_tags')
+        ->serializeToForum('huseyinfiliz-custom-profile-page.default_template', 'huseyinfiliz-custom-profile-page.default_template')
+        ->serializeToForum('huseyinfiliz-custom-profile-page.enable_media_embeds', 'huseyinfiliz-custom-profile-page.enable_media_embeds'),
     
     (new Extend\ApiSerializer(UserSerializer::class))
         ->hasOne('customPage', CustomProfilePageSerializer::class),
@@ -49,27 +56,17 @@ return [
     (new Extend\ApiSerializer(ForumSerializer::class))
         ->attributes(function (ForumSerializer $serializer) {
             $actor = $serializer->getActor();
-            $settings = resolve(SettingsRepositoryInterface::class);
             
-            // ✅ Permission kontrolleri
-            $attributes = [
-                'huseyinfiliz-custom-profile-page.tab_title' => $settings->get('huseyinfiliz-custom-profile-page.tab_title', 'Custom Page'),
-                'huseyinfiliz-custom-profile-page.tab_icon' => $settings->get('huseyinfiliz-custom-profile-page.tab_icon', 'fas fa-file-alt'),
-                'huseyinfiliz-custom-profile-page.url_slug' => $settings->get('huseyinfiliz-custom-profile-page.url_slug', 'customPage'),
-                'huseyinfiliz-custom-profile-page.content_format' => $settings->get('huseyinfiliz-custom-profile-page.content_format', 'markdown'),
-                'huseyinfiliz-custom-profile-page.allowed_html_tags' => $settings->get('huseyinfiliz-custom-profile-page.allowed_html_tags', 'b,i,u,strong,em,a,br,p,ul,ol,li,blockquote,code,pre'),
-				'huseyinfiliz-custom-profile-page.default_template' => $settings->get('huseyinfiliz-custom-profile-page.default_template', ''),
-				'huseyinfiliz-custom-profile-page.enable_media_embeds' => (bool) $settings->get('huseyinfiliz-custom-profile-page.enable_media_embeds', true),
-            ];
             
+            $attributes = [];
+
             if ($actor !== null) {
                 $attributes['canEditOwnCustomPage'] = $actor->hasPermission('user.editOwnCustomPage');
                 $attributes['canViewCustomPage'] = $actor->hasPermission('user.viewCustomPage');
                 $attributes['canModerateCustomPage'] = $actor->hasPermission('user.moderateCustomPage');
             } else {
-                // Guest kullanıcılar
                 $attributes['canEditOwnCustomPage'] = false;
-                $attributes['canViewCustomPage'] = true; // Guests can view
+                $attributes['canViewCustomPage'] = true;
                 $attributes['canModerateCustomPage'] = false;
             }
             
