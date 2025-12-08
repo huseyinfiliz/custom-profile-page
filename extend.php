@@ -42,13 +42,22 @@ return [
         ->default('huseyinfiliz-custom-profile-page.default_template', '')
         ->default('huseyinfiliz-custom-profile-page.enable_media_embeds', '1')
         
+        // Serialize İşlemleri (Ayarları Frontend'e Gönderme)
         ->serializeToForum('huseyinfiliz-custom-profile-page.tab_title', 'huseyinfiliz-custom-profile-page.tab_title')
         ->serializeToForum('huseyinfiliz-custom-profile-page.tab_icon', 'huseyinfiliz-custom-profile-page.tab_icon')
         ->serializeToForum('huseyinfiliz-custom-profile-page.url_slug', 'huseyinfiliz-custom-profile-page.url_slug')
         ->serializeToForum('huseyinfiliz-custom-profile-page.content_format', 'huseyinfiliz-custom-profile-page.content_format')
         ->serializeToForum('huseyinfiliz-custom-profile-page.allowed_html_tags', 'huseyinfiliz-custom-profile-page.allowed_html_tags')
         ->serializeToForum('huseyinfiliz-custom-profile-page.default_template', 'huseyinfiliz-custom-profile-page.default_template')
-        ->serializeToForum('huseyinfiliz-custom-profile-page.enable_media_embeds', 'huseyinfiliz-custom-profile-page.enable_media_embeds'),
+        
+        // Son satırı özellikle düzelttim: Boolean dönüşümü ekledik.
+        ->serializeToForum(
+            'huseyinfiliz-custom-profile-page.enable_media_embeds', 
+            'huseyinfiliz-custom-profile-page.enable_media_embeds', 
+            function ($value) {
+                return (bool) $value;
+            }
+        ),
     
     (new Extend\ApiSerializer(UserSerializer::class))
         ->hasOne('customPage', CustomProfilePageSerializer::class),
@@ -56,8 +65,6 @@ return [
     (new Extend\ApiSerializer(ForumSerializer::class))
         ->attributes(function (ForumSerializer $serializer) {
             $actor = $serializer->getActor();
-            
-            
             $attributes = [];
 
             if ($actor !== null) {
