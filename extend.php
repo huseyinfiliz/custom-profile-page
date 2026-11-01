@@ -10,6 +10,10 @@ use HuseyinFiliz\CustomProfilePage\Api\Controller\CreateCustomPageController;
 use HuseyinFiliz\CustomProfilePage\Api\Controller\ShowCustomPageController;
 use HuseyinFiliz\CustomProfilePage\Api\Controller\UpdateCustomPageController;
 use HuseyinFiliz\CustomProfilePage\Api\Serializer\CustomProfilePageSerializer;
+use Flarum\Api\Context;
+use Flarum\Api\Endpoint;
+use Flarum\Api\Resource;
+use Flarum\Api\Schema;
 
 return [
     (new Extend\Frontend('forum'))
@@ -59,9 +63,11 @@ return [
             }
         ),
     
+    // @TODO: Replace with the new implementation https://docs.flarum.org/2.x/extend/api#extending-api-resources
     (new Extend\ApiSerializer(UserSerializer::class))
         ->hasOne('customPage', CustomProfilePageSerializer::class),
     
+    // @TODO: Replace with the new implementation https://docs.flarum.org/2.x/extend/api#extending-api-resources
     (new Extend\ApiSerializer(ForumSerializer::class))
         ->attributes(function (ForumSerializer $serializer) {
             $actor = $serializer->getActor();
@@ -79,4 +85,5 @@ return [
             
             return $attributes;
         }),
+    new Extend\ApiResource(Api\Resource\CustomProfilePageResource::class),
 ];
