@@ -1,9 +1,9 @@
 import app from 'flarum/forum/app';
-import Modal from 'flarum/common/components/Modal';
+import FormModal from 'flarum/common/components/FormModal';
 import Button from 'flarum/common/components/Button';
 import Stream from 'flarum/common/utils/Stream';
 
-export default class EditCustomPageModal extends Modal {
+export default class EditCustomPageModal extends FormModal {
   contentText!: Stream<string>;
   loading: boolean = false;
   textareaElement: HTMLTextAreaElement | null = null;

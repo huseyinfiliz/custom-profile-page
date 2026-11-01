@@ -1,7 +1,7 @@
 import app from 'flarum/admin/app';
 
 app.initializers.add('huseyinfiliz/custom-profile-page', () => {
-  app.extensionData
+  app.registry
     .for('huseyinfiliz-custom-profile-page')
     .registerSetting({
       setting: 'huseyinfiliz-custom-profile-page.tab_title',
