@@ -46,7 +46,7 @@ app.initializers.add('huseyinfiliz/custom-profile-page', () => {
       setting: 'huseyinfiliz-custom-profile-page.default_template',
       label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.default_template'),
       type: 'textarea',
-	  rows: 20,
+      rows: 20,
       placeholder: '',
       help: app.translator.trans('huseyinfiliz-custom-profile-page.admin.settings.default_template_help'),
     })
@@ -71,7 +71,7 @@ app.initializers.add('huseyinfiliz/custom-profile-page', () => {
         icon: 'fas fa-eye',
         label: app.translator.trans('huseyinfiliz-custom-profile-page.admin.permissions.view'),
         permission: 'user.viewCustomPage',
-        allowGuest: true
+        allowGuest: true,
       },
       'view',
       95

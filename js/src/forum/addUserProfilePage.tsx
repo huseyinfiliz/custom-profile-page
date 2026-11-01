@@ -16,21 +16,21 @@ export default function addUserProfilePage() {
 
     // 2. Durum: app.forum hazır değil, ham veriye (Payload) bakacağız.
     const data = app.data as any;
-    
+
     // A) Ana dökümana bak (Anasayfadaysak buradadır)
     if (data.apiDocument?.data?.type === 'forums') {
-        return data.apiDocument.data.attributes?.[attributeName];
+      return data.apiDocument.data.attributes?.[attributeName];
     }
 
     // B) Resources dizisine bak (Profil sayfasındaysak "forums" buraya saklanmıştır)
     // Önceki debug kodunuzda burası çalışmıştı.
     if (Array.isArray(data.resources)) {
-        const forumResource = data.resources.find((r: any) => r.type === 'forums');
-        if (forumResource?.attributes) {
-            return forumResource.attributes[attributeName];
-        }
+      const forumResource = data.resources.find((r: any) => r.type === 'forums');
+      if (forumResource?.attributes) {
+        return forumResource.attributes[attributeName];
+      }
     }
-    
+
     // C) Hiçbiri yoksa
     return null;
   };
@@ -42,7 +42,7 @@ export default function addUserProfilePage() {
   // Rotayı oluştur (Artık "test" veya ayarlı kelime neyse o gelecek)
   app.routes['user.customPage'] = {
     path: `/u/:username/${urlSlug}`,
-    component: CustomProfilePageComponent
+    component: CustomProfilePageComponent,
   };
 
   // Kullanıcı profili menüsüne butonu ekle
@@ -52,8 +52,7 @@ export default function addUserProfilePage() {
 
     // Yetki kontrolleri
     const canView = app.forum?.attribute('canViewCustomPage');
-    const canEdit = app.session.user?.id() === user.id() && 
-                   app.forum?.attribute('canEditOwnCustomPage');
+    const canEdit = app.session.user?.id() === user.id() && app.forum?.attribute('canEditOwnCustomPage');
 
     if (!canView && !canEdit) {
       return;

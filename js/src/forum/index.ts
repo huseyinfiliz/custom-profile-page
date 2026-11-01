@@ -5,7 +5,7 @@ import addUserProfilePage from './addUserProfilePage';
 app.initializers.add('huseyinfiliz/custom-profile-page', () => {
   // Model'i kaydet
   app.store.models['custom-profile-pages'] = CustomProfilePage;
-  
+
   // User profile page ekle
   addUserProfilePage();
 });

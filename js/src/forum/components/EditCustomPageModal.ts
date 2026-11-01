@@ -10,11 +10,11 @@ export default class EditCustomPageModal extends Modal {
 
   oninit(vnode: any) {
     super.oninit(vnode);
-    
+
     // ✅ KEY LOGIC: Eğer customPage yoksa (yeni sayfa) ve
     // admin'den template varsa, template'i yükle
     let initialContent = '';
-    
+
     if (this.attrs.customPage?.content()) {
       // Mevcut sayfa varsa, kendi içeriğini kullan
       initialContent = this.attrs.customPage.content();
@@ -23,7 +23,7 @@ export default class EditCustomPageModal extends Modal {
       const template = app.forum.attribute<string>('huseyinfiliz-custom-profile-page.default_template') || '';
       initialContent = template;
     }
-    
+
     this.contentText = Stream(initialContent);
   }
 
@@ -43,13 +43,11 @@ export default class EditCustomPageModal extends Modal {
       m('.Form', [
         // Format bilgisi
         this.renderFormatInfo(format),
-        
+
         // Markdown toolbar
         isMarkdown && this.renderMarkdownToolbar(),
-        
-        m('.Form-group', [
-          this.renderTextarea()
-        ]),
+
+        m('.Form-group', [this.renderTextarea()]),
 
         m('.Form-group.EditCustomPageModal-actions', [
           Button.component(
@@ -70,16 +68,16 @@ export default class EditCustomPageModal extends Modal {
               onclick: () => this.hide(),
             },
             app.translator.trans('huseyinfiliz-custom-profile-page.forum.profile_tab.cancel_button')
-          )
-        ])
-      ])
+          ),
+        ]),
+      ]),
     ]);
   }
 
   renderFormatInfo(format: string) {
     let icon = '';
     let text = '';
-    
+
     if (format === 'markdown') {
       icon = 'fab fa-markdown';
       text = 'You can use Markdown formatting: **bold**, *italic*, [link](url), `code`, etc.';
@@ -92,61 +90,62 @@ export default class EditCustomPageModal extends Modal {
       text = 'Plain text only. No HTML or Markdown formatting allowed.';
     }
 
-    return m('.Alert.EditCustomPageModal-formatInfo', [
-      m('i.icon', { className: icon }),
-      m('span', text)
-    ]);
+    return m('.Alert.EditCustomPageModal-formatInfo', [m('i.icon', { className: icon }), m('span', text)]);
   }
 
   renderMarkdownToolbar() {
     return m('.MarkdownToolbar.ButtonGroup', [
       // Header
       this.toolbarButton('Heading', 'fas fa-heading', '\n## ', ''),
-      
+
       // Bold
       this.toolbarButton('Bold', 'fas fa-bold', '**', '**'),
-      
+
       // Italic
       this.toolbarButton('Italic', 'fas fa-italic', '*', '*'),
-      
+
       // Strikethrough
       this.toolbarButton('Strikethrough', 'fas fa-strikethrough', '~~', '~~'),
-      
+
       // Quote
       this.toolbarButton('Quote', 'fas fa-quote-left', '\n> ', ''),
-      
+
       // Spoiler
       this.toolbarButton('Spoiler', 'fas fa-eye-slash', '>!', '!<'),
-      
+
       // Code
       this.toolbarButton('Code', 'fas fa-code', '`', '`'),
-      
+
       // Link
       this.toolbarButton('Link', 'fas fa-link', '[', '](url)'),
-      
+
       // Image
       this.toolbarButton('Image', 'fas fa-image', '![', '](image-url)'),
-      
+
       // Bulleted List
       this.toolbarButton('Bulleted List', 'fas fa-list-ul', '\n- ', ''),
-      
+
       // Numbered List
       this.toolbarButton('Numbered List', 'fas fa-list-ol', '\n1. ', ''),
-      
+
       // Mention
       this.toolbarButton('Mention', 'fas fa-at', '@', ''),
     ]);
   }
 
   toolbarButton(name: string, icon: string, before: string, after: string) {
-    return m('button.Button.Button--icon.Button--link', {
-      type: 'button',
-      title: name,
-      onclick: (e: Event) => {
-        e.preventDefault();
-        this.insertMarkdown(before, after);
+    return m(
+      'button.Button.Button--icon.Button--link',
+      {
+        type: 'button',
+        title: name,
+        onclick: (e: Event) => {
+          e.preventDefault();
+          this.insertMarkdown(before, after);
+        },
       },
-    }, m('i', { className: icon }));
+      m('i', { className: icon })
+    );
   }
 
   insertMarkdown(before: string, after: string) {
@@ -159,9 +158,9 @@ export default class EditCustomPageModal extends Modal {
     const selectedText = text.substring(start, end);
 
     const newText = text.substring(0, start) + before + selectedText + after + text.substring(end);
-    
+
     this.contentText(newText);
-    
+
     setTimeout(() => {
       const newCursorPos = start + before.length + selectedText.length;
       textarea.focus();
@@ -202,32 +201,30 @@ export default class EditCustomPageModal extends Modal {
     const method = this.attrs.customPage ? 'PATCH' : 'POST';
     const url = `${app.forum.attribute('apiUrl')}/users/${userId}/custom-page`;
 
-    app.request({
-      method,
-      url,
-      body: { data },
-    })
+    app
+      .request({
+        method,
+        url,
+        body: { data },
+      })
       .then((response) => {
         this.loading = false;
-        
+
         if (response.data) {
           const page = app.store.pushPayload(response);
           if (this.attrs.onSave) {
             this.attrs.onSave(page);
           }
         }
-        
+
         this.hide();
         m.redraw();
       })
       .catch(() => {
         this.loading = false;
-        
-        app.alerts.show(
-          { type: 'error' },
-          app.translator.trans('huseyinfiliz-custom-profile-page.forum.edit_modal.error')
-        );
-        
+
+        app.alerts.show({ type: 'error' }, app.translator.trans('huseyinfiliz-custom-profile-page.forum.edit_modal.error'));
+
         m.redraw();
       });
   }
