@@ -2,40 +2,40 @@
 
 namespace HuseyinFiliz\CustomProfilePage\Api\Controller;
 
-use Flarum\Api\Controller\AbstractShowController;
 use Flarum\Http\RequestUtil;
-use HuseyinFiliz\CustomProfilePage\Api\Serializer\CustomProfilePageSerializer;
+use HuseyinFiliz\CustomProfilePage\Api\Serializer;
 use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
 use Illuminate\Support\Arr;
+use Laminas\Diactoros\Response\JsonResponse;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
+use Psr\Http\Server\RequestHandlerInterface;
 
-/**
- * @TODO: Remove this in favor of one of the API resource classes that were added.
- *      Or extend an existing API Resource to add this to.
- *      Or use a vanilla RequestHandlerInterface controller.
- *      @link https://docs.flarum.org/2.x/extend/api#endpoints
- */
-class ShowCustomPageController extends AbstractShowController
+class ShowCustomPageController implements RequestHandlerInterface
 {
-    public $serializer = CustomProfilePageSerializer::class;
-
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $userId = Arr::get($request->getQueryParams(), 'id');
         $actor = RequestUtil::getActor($request);
-        
-        // ✅ Sayfayı bul
+
         $page = CustomProfilePage::where('user_id', $userId)->first();
-        
-        // Sayfa yoksa null dön
+
         if (!$page) {
-            return null;
+            return new JsonResponse([
+                'errors' => [
+                    [
+                        'status' => '404',
+                        'code' => 'not_found',
+                        'detail' => 'Custom profile page not found.',
+                    ],
+                ],
+            ], 404);
         }
-        
-        // ✅ Permission kontrolü - Policy kullan
+
         $actor->assertCan('view', $page);
-        
-        return $page;
+
+        return new JsonResponse([
+            'data' => Serializer::data($page),
+        ]);
     }
 }

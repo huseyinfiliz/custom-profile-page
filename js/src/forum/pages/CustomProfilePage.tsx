@@ -3,14 +3,17 @@ import app from 'flarum/forum/app';
 import LoadingIndicator from 'flarum/common/components/LoadingIndicator';
 import Button from 'flarum/common/components/Button';
 import EditCustomPageModal from '../components/EditCustomPageModal';
+import type CustomProfilePageModel from '../models/CustomProfilePage';
+import type User from 'flarum/common/models/User';
+import type Mithril from 'mithril';
 
 export default class CustomProfilePage extends UserPage {
   loading: boolean = true;
   error: string | null = null;
-  customPage: any = null;
+  customPage: CustomProfilePageModel | null = null;
   permissionDenied: boolean = false;
 
-  oninit(vnode) {
+  oninit(vnode: Mithril.Vnode) {
     super.oninit(vnode);
 
     this.loading = true;
@@ -21,57 +24,49 @@ export default class CustomProfilePage extends UserPage {
     this.loadUser(m.route.param('username'));
   }
 
-  show(user) {
+  show(user: User) {
     super.show(user);
     this.loadCustomPage();
   }
 
-  oncreate(vnode) {
+  oncreate(vnode: Mithril.VnodeDOM) {
     super.oncreate(vnode);
     this.processMediaLinks();
   }
 
-  onupdate(vnode) {
+  onupdate(vnode: Mithril.VnodeDOM) {
     super.onupdate(vnode);
     this.processMediaLinks();
   }
 
-  // ✅ YouTube ve diğer media linklerini iframe'e çevir
   processMediaLinks() {
-    // ✅ Admin ayarını kontrol et
-    const enableMediaEmbeds = app.forum.attribute('huseyinfiliz-custom-profile-page.enable_media_embeds');
+    const enableMediaEmbeds = app.forum?.attribute<boolean>('huseyinfiliz-custom-profile-page.enable_media_embeds');
 
     if (!enableMediaEmbeds) {
-      return; // Embed kapalıysa hiçbir şey yapma
+      return;
     }
 
     setTimeout(() => {
       const content = this.element?.querySelector('.CustomProfilePage-content');
       if (!content) return;
 
-      // YouTube linklerini bul ve iframe'e çevir
-      const links = content.querySelectorAll('a[href*="youtube.com"], a[href*="youtu.be"]');
+      const links = content.querySelectorAll<HTMLAnchorElement>('a[href*="youtube.com"], a[href*="youtu.be"]');
 
       links.forEach((link) => {
-        // Zaten işlenmiş mi kontrol et
         if (link.classList.contains('media-processed')) return;
 
         const url = link.getAttribute('href');
         if (!url) return;
 
-        // YouTube video ID'sini çıkar
-        let videoId = null;
+        let videoId: string | null = null;
 
-        // youtube.com/watch?v=VIDEO_ID
         const match1 = url.match(/[?&]v=([^&]+)/);
         if (match1) videoId = match1[1];
 
-        // youtu.be/VIDEO_ID
         const match2 = url.match(/youtu\.be\/([^?]+)/);
         if (match2) videoId = match2[1];
 
         if (videoId) {
-          // Iframe oluştur
           const iframe = document.createElement('iframe');
           iframe.src = `https://www.youtube.com/embed/${videoId}`;
           iframe.width = '560';
@@ -83,12 +78,11 @@ export default class CustomProfilePage extends UserPage {
           iframe.style.marginTop = '10px';
           iframe.style.marginBottom = '10px';
 
-          // Link'in parent'ını bul ve iframe'i ekle
           const parent = link.parentElement;
           if (parent) {
             parent.appendChild(iframe);
             link.classList.add('media-processed');
-            link.style.display = 'none'; // Link'i gizle
+            link.style.display = 'none';
           }
         }
       });
@@ -123,7 +117,7 @@ export default class CustomProfilePage extends UserPage {
     const currentUser = app.session.user;
 
     if (!currentUser) {
-      const contentHtml = this.customPage?.attribute('contentHtml') || '';
+      const contentHtml = this.customPage?.contentHtml() || '';
 
       return (
         <div className="CustomProfilePage">
@@ -132,13 +126,13 @@ export default class CustomProfilePage extends UserPage {
       );
     }
 
-    const isModerator = app.forum.attribute('canModerateCustomPage');
+    const isModerator = app.forum?.attribute<boolean>('canModerateCustomPage');
     const isOwnPage = currentUser.id() === this.user?.id();
-    const canEditOwn = app.forum.attribute('canEditOwnCustomPage');
+    const canEditOwn = app.forum?.attribute<boolean>('canEditOwnCustomPage');
 
-    const canEdit = isModerator || (isOwnPage && canEditOwn);
+    const canEdit = !!(isModerator || (isOwnPage && canEditOwn));
 
-    const contentHtml = this.customPage?.attribute('contentHtml') || '';
+    const contentHtml = this.customPage?.contentHtml() || '';
 
     return (
       <div className="CustomProfilePage">
@@ -148,10 +142,11 @@ export default class CustomProfilePage extends UserPage {
               className="Button Button--primary"
               icon="fas fa-edit"
               onclick={() => {
+                if (!this.user) return;
                 app.modal.show(EditCustomPageModal, {
                   user: this.user,
                   customPage: this.customPage,
-                  onSave: (page) => {
+                  onSave: (page: CustomProfilePageModel) => {
                     this.customPage = page;
                     m.redraw();
                   },
@@ -179,22 +174,22 @@ export default class CustomProfilePage extends UserPage {
     this.customPage = null;
 
     app
-      .request({
+      .request<any>({
         method: 'GET',
         url: app.forum.attribute('apiUrl') + '/users/' + this.user.id() + '/custom-page',
       })
-      .then((response) => {
+      .then((response: any) => {
         if (response.data) {
-          this.customPage = app.store.pushPayload(response);
+          this.customPage = app.store.pushPayload<CustomProfilePageModel>(response);
         }
       })
-      .catch((error) => {
+      .catch((error: any) => {
         if (error.status === 403) {
           this.permissionDenied = true;
         } else if (error.status === 404) {
           this.customPage = null;
         } else {
-          this.error = app.translator.trans('huseyinfiliz-custom-profile-page.forum.errors.load_failed');
+          this.error = app.translator.trans('huseyinfiliz-custom-profile-page.forum.errors.load_failed') as string;
         }
       })
       .finally(() => {
@@ -203,7 +198,7 @@ export default class CustomProfilePage extends UserPage {
       });
   }
 
-  renderEmpty(canEdit) {
+  renderEmpty(canEdit: boolean) {
     return (
       <div className="Placeholder">
         <p>

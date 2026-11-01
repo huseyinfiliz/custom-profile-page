@@ -2,64 +2,45 @@
 
 namespace HuseyinFiliz\CustomProfilePage\Api\Controller;
 
-use Flarum\Api\Controller\AbstractCreateController;
+use Flarum\Foundation\ValidationException;
 use Flarum\Http\RequestUtil;
 use Flarum\User\User;
-use Flarum\User\Exception\PermissionDeniedException;
-use HuseyinFiliz\CustomProfilePage\Api\Serializer\CustomProfilePageSerializer;
+use HuseyinFiliz\CustomProfilePage\Api\Serializer;
 use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
 use Illuminate\Support\Arr;
+use Laminas\Diactoros\Response\JsonResponse;
+use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Tobscure\JsonApi\Document;
+use Psr\Http\Server\RequestHandlerInterface;
 
-/**
- * @TODO: Remove this in favor of one of the API resource classes that were added.
- *      Or extend an existing API Resource to add this to.
- *      Or use a vanilla RequestHandlerInterface controller.
- *      @link https://docs.flarum.org/2.x/extend/api#endpoints
- */
-class CreateCustomPageController extends AbstractCreateController
+class CreateCustomPageController implements RequestHandlerInterface
 {
-    public $serializer = CustomProfilePageSerializer::class;
-
-    protected function data(ServerRequestInterface $request, Document $document)
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $userId = Arr::get($request->getQueryParams(), 'id');
+        $userId = (int) Arr::get($request->getQueryParams(), 'id');
         $actor = RequestUtil::getActor($request);
-        
-        // Kullanıcıyı bul
-        $user = User::findOrFail($userId);
-        
-        // ✅ Yetki kontrolü
-        $isModerator = $actor->hasPermission('user.moderateCustomPage');
-        $isOwnPage = $actor->id == $userId;
-        $canEditOwn = $actor->hasPermission('user.editOwnCustomPage');
-        
-        // Eğer moderatör değilse ve kendi sayfası değilse
-        if (!$isModerator && !$isOwnPage) {
-            throw new PermissionDeniedException();
-        }
-        
-        // Eğer kendi sayfası ama edit yetkisi yoksa
-        if ($isOwnPage && !$canEditOwn && !$isModerator) {
-            throw new PermissionDeniedException();
-        }
-        
-        // ✅ Zaten var mı kontrol et
+
+        User::findOrFail($userId);
+
+        $actor->assertCan('create', $userId);
+
         $existingPage = CustomProfilePage::where('user_id', $userId)->first();
         if ($existingPage) {
-            throw new \Exception('Custom page already exists. Use PATCH to update.');
+            throw new ValidationException([
+                'message' => 'Custom page already exists. Use PATCH to update.',
+            ]);
         }
-        
+
         $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
         $content = Arr::get($attributes, 'content', '');
-        
-        // ✅ Yeni sayfa oluştur
+
         $page = new CustomProfilePage();
         $page->user_id = $userId;
         $page->content = $content;
         $page->save();
-        
-        return $page;
+
+        return new JsonResponse([
+            'data' => Serializer::data($page),
+        ], 201);
     }
 }

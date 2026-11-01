@@ -2,7 +2,6 @@
 
 namespace HuseyinFiliz\CustomProfilePage\Api\Resource;
 
-use Flarum\Api\Context;
 use Flarum\Api\Endpoint;
 use Flarum\Api\Resource;
 use Flarum\Api\Schema;
@@ -28,39 +27,81 @@ class CustomProfilePageResource extends Resource\AbstractDatabaseResource
 
     public function scope(Builder $query, OriginalContext $context): void
     {
-        $query->whereVisibleTo($context->getActor());
+        $actor = $context->getActor();
+        $query->whereVisibleTo($actor);
+
+        $params = $context->request->getQueryParams();
+        if (isset($params['filter']['user'])) {
+            $query->where('user_id', $params['filter']['user']);
+        }
     }
 
     public function endpoints(): array
     {
         return [
+            Endpoint\Index::make()
+                ->paginate(),
+            Endpoint\Show::make()
+                ->can('view'),
+            Endpoint\Create::make()
+                ->can('create')
+                ->before(function (OriginalContext $context) {
+                    $actor = $context->getActor();
+                    $attrs = (array) ($context->body()['data']['attributes'] ?? []);
+                    $userId = $attrs['userId'] ?? $actor->id;
+
+                    $actor->assertCan('create', (int) $userId);
+                }),
+            Endpoint\Update::make()
+                ->can('update'),
+            Endpoint\Delete::make()
+                ->can('delete'),
         ];
     }
 
     public function fields(): array
     {
         return [
-
-            /**
-             * @todo migrate logic from old serializer and controllers to this API Resource.
-             * @see https://docs.flarum.org/2.x/extend/api#api-resources
-             */
-
-            // Example:
-            Schema\Str::make('name')
-                ->requiredOnCreate()
-                ->minLength(3)
-                ->maxLength(255)
+            Schema\Integer::make('userId')
+                ->property('user_id'),
+            Schema\Str::make('content')
+                ->nullable()
                 ->writable(),
+            Schema\Str::make('contentHtml')
+                ->get(fn (CustomProfilePage $page) => $page->content_html),
+            Schema\DateTime::make('createdAt')
+                ->property('created_at'),
+            Schema\DateTime::make('updatedAt')
+                ->property('updated_at'),
 
-
+            Schema\Relationship\ToOne::make('user')
+                ->type('users')
+                ->includable(),
         ];
     }
 
     public function sorts(): array
     {
         return [
-            // SortColumn::make('createdAt'),
+            SortColumn::make('updatedAt', 'updated_at'),
+            SortColumn::make('createdAt', 'created_at'),
         ];
+    }
+
+    public function newModel(OriginalContext $context): object
+    {
+        /** @var CustomProfilePage $model */
+        $model = parent::newModel($context);
+        $attrs = (array) ($context->body()['data']['attributes'] ?? []);
+        $actor = $context->getActor();
+
+        $userId = $attrs['userId'] ?? $actor->id;
+        if ($actor->hasPermission('user.moderateCustomPage')) {
+            $model->user_id = (int) $userId;
+        } else {
+            $model->user_id = $actor->id;
+        }
+
+        return $model;
     }
 }

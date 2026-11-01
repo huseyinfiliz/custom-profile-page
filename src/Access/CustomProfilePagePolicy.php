@@ -11,18 +11,16 @@ class CustomProfilePagePolicy extends AbstractPolicy
     /**
      * Permission kontrolü ile görüntüleme
      */
-    public function view(?User $actor, CustomProfilePage $page)
+    public function view(User $actor, CustomProfilePage $page)
     {
-        // ✅ Guest'ler de görebilir
-        if (!$actor) {
-            return $this->allow();
-        }
-        
-        // ✅ Permission kontrolü
         if ($actor->hasPermission('user.viewCustomPage')) {
             return $this->allow();
         }
-        
+
+        if ($actor->id && $actor->id === $page->user_id && $actor->hasPermission('user.editOwnCustomPage')) {
+            return $this->allow();
+        }
+
         return $this->deny();
     }
 
@@ -31,13 +29,11 @@ class CustomProfilePagePolicy extends AbstractPolicy
      */
     public function update(User $actor, CustomProfilePage $page)
     {
-        // 1. Moderatör ise her sayfayı düzenleyebilir
         if ($actor->hasPermission('user.moderateCustomPage')) {
             return $this->allow();
         }
 
-        // 2. Kendi sayfası ise ve izni varsa düzenleyebilir
-        if ($actor->id === $page->user_id && $actor->hasPermission('user.editOwnCustomPage')) {
+        if ($actor->id && $actor->id === $page->user_id && $actor->hasPermission('user.editOwnCustomPage')) {
             return $this->allow();
         }
 
@@ -47,15 +43,31 @@ class CustomProfilePagePolicy extends AbstractPolicy
     /**
      * Sayfa oluşturma yetkisi
      */
-    public function create(User $actor, int $userId)
+    public function create(User $actor, CustomProfilePage|int $pageOrUserId)
     {
-        // 1. Moderatör ise herkes için sayfa oluşturabilir
         if ($actor->hasPermission('user.moderateCustomPage')) {
             return $this->allow();
         }
 
-        // 2. Kendi sayfası için oluşturabilir
-        if ($actor->id === $userId && $actor->hasPermission('user.editOwnCustomPage')) {
+        $userId = $pageOrUserId instanceof CustomProfilePage ? $pageOrUserId->user_id : (int) $pageOrUserId;
+
+        if ($actor->id && $actor->id === $userId && $actor->hasPermission('user.editOwnCustomPage')) {
+            return $this->allow();
+        }
+
+        return $this->deny();
+    }
+
+    /**
+     * Sayfa silme yetkisi
+     */
+    public function delete(User $actor, CustomProfilePage $page)
+    {
+        if ($actor->hasPermission('user.moderateCustomPage')) {
+            return $this->allow();
+        }
+
+        if ($actor->id && $actor->id === $page->user_id && $actor->hasPermission('user.editOwnCustomPage')) {
             return $this->allow();
         }
 

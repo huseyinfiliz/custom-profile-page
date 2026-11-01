@@ -1,26 +1,31 @@
 import app from 'flarum/forum/app';
-import FormModal from 'flarum/common/components/FormModal';
+import FormModal, { IFormModalAttrs } from 'flarum/common/components/FormModal';
 import Button from 'flarum/common/components/Button';
 import Stream from 'flarum/common/utils/Stream';
+import type User from 'flarum/common/models/User';
+import type CustomProfilePage from '../models/CustomProfilePage';
+import type Mithril from 'mithril';
 
-export default class EditCustomPageModal extends FormModal {
+export interface IEditCustomPageModalAttrs extends IFormModalAttrs {
+  user: User;
+  customPage?: CustomProfilePage | null;
+  onSave?: (page: CustomProfilePage) => void;
+}
+
+export default class EditCustomPageModal extends FormModal<IEditCustomPageModalAttrs> {
   contentText!: Stream<string>;
   loading: boolean = false;
   textareaElement: HTMLTextAreaElement | null = null;
 
-  oninit(vnode: any) {
+  oninit(vnode: Mithril.Vnode<IEditCustomPageModalAttrs, this>) {
     super.oninit(vnode);
 
-    // ✅ KEY LOGIC: Eğer customPage yoksa (yeni sayfa) ve
-    // admin'den template varsa, template'i yükle
     let initialContent = '';
 
     if (this.attrs.customPage?.content()) {
-      // Mevcut sayfa varsa, kendi içeriğini kullan
-      initialContent = this.attrs.customPage.content();
+      initialContent = this.attrs.customPage.content() || '';
     } else {
-      // Yeni sayfa → admin template'ini yükle
-      const template = app.forum.attribute<string>('huseyinfiliz-custom-profile-page.default_template') || '';
+      const template = app.forum?.attribute<string>('huseyinfiliz-custom-profile-page.default_template') || '';
       initialContent = template;
     }
 
@@ -36,19 +41,14 @@ export default class EditCustomPageModal extends FormModal {
   }
 
   content() {
-    const format = app.forum.attribute<string>('huseyinfiliz-custom-profile-page.content_format') || 'markdown';
+    const format = app.forum?.attribute<string>('huseyinfiliz-custom-profile-page.content_format') || 'markdown';
     const isMarkdown = format === 'markdown';
 
     return m('.Modal-body', [
       m('.Form', [
-        // Format bilgisi
         this.renderFormatInfo(format),
-
-        // Markdown toolbar
         isMarkdown && this.renderMarkdownToolbar(),
-
         m('.Form-group', [this.renderTextarea()]),
-
         m('.Form-group.EditCustomPageModal-actions', [
           Button.component(
             {
@@ -82,7 +82,7 @@ export default class EditCustomPageModal extends FormModal {
       icon = 'fab fa-markdown';
       text = 'You can use Markdown formatting: **bold**, *italic*, [link](url), `code`, etc.';
     } else if (format === 'html') {
-      const allowedTags = app.forum.attribute<string>('huseyinfiliz-custom-profile-page.allowed_html_tags') || '';
+      const allowedTags = app.forum?.attribute<string>('huseyinfiliz-custom-profile-page.allowed_html_tags') || '';
       icon = 'fab fa-html5';
       text = `You can use the following HTML tags: ${allowedTags}`;
     } else {
@@ -95,40 +95,17 @@ export default class EditCustomPageModal extends FormModal {
 
   renderMarkdownToolbar() {
     return m('.MarkdownToolbar.ButtonGroup', [
-      // Header
       this.toolbarButton('Heading', 'fas fa-heading', '\n## ', ''),
-
-      // Bold
       this.toolbarButton('Bold', 'fas fa-bold', '**', '**'),
-
-      // Italic
       this.toolbarButton('Italic', 'fas fa-italic', '*', '*'),
-
-      // Strikethrough
       this.toolbarButton('Strikethrough', 'fas fa-strikethrough', '~~', '~~'),
-
-      // Quote
       this.toolbarButton('Quote', 'fas fa-quote-left', '\n> ', ''),
-
-      // Spoiler
       this.toolbarButton('Spoiler', 'fas fa-eye-slash', '>!', '!<'),
-
-      // Code
       this.toolbarButton('Code', 'fas fa-code', '`', '`'),
-
-      // Link
       this.toolbarButton('Link', 'fas fa-link', '[', '](url)'),
-
-      // Image
       this.toolbarButton('Image', 'fas fa-image', '![', '](image-url)'),
-
-      // Bulleted List
       this.toolbarButton('Bulleted List', 'fas fa-list-ul', '\n- ', ''),
-
-      // Numbered List
       this.toolbarButton('Numbered List', 'fas fa-list-ol', '\n1. ', ''),
-
-      // Mention
       this.toolbarButton('Mention', 'fas fa-at', '@', ''),
     ]);
   }
@@ -173,11 +150,11 @@ export default class EditCustomPageModal extends FormModal {
     return m('textarea.FormControl', {
       rows: 20,
       value: this.contentText(),
-      oninput: (e: any) => {
-        this.contentText(e.target.value);
+      oninput: (e: InputEvent) => {
+        this.contentText((e.target as HTMLTextAreaElement).value);
       },
-      oncreate: (vnode: any) => {
-        this.textareaElement = vnode.dom;
+      oncreate: (vnode: Mithril.VnodeDOM) => {
+        this.textareaElement = vnode.dom as HTMLTextAreaElement;
       },
       placeholder: app.translator.trans('huseyinfiliz-custom-profile-page.forum.edit_modal.content_placeholder'),
       disabled: this.loading,
@@ -202,16 +179,16 @@ export default class EditCustomPageModal extends FormModal {
     const url = `${app.forum.attribute('apiUrl')}/users/${userId}/custom-page`;
 
     app
-      .request({
+      .request<any>({
         method,
         url,
         body: { data },
       })
-      .then((response) => {
+      .then((response: any) => {
         this.loading = false;
 
         if (response.data) {
-          const page = app.store.pushPayload(response);
+          const page = app.store.pushPayload<CustomProfilePage>(response);
           if (this.attrs.onSave) {
             this.attrs.onSave(page);
           }
