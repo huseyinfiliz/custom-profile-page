@@ -15,7 +15,7 @@ class CustomProfilePage extends AbstractModel
 
     protected $table = 'custom_profile_pages';
 
-    protected $dates = ['created_at', 'updated_at'];
+    protected $casts = ['created_at' => 'datetime', 'updated_at' => 'datetime'];
 
     public $timestamps = true;
 
