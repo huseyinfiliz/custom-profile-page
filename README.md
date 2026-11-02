@@ -83,4 +83,3 @@ If you find this extension helpful, consider supporting its development:
 - ⭐ Star the repository on GitHub
 - 💬 Share feedback and suggestions
 - 🌍 Help translate to other languages
-- ☕ Donate (ERC20 USDT): 0x69da494fe8157ac730fcdd59c2c4a63314e3cb4f
