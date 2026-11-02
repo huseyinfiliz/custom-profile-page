@@ -3,6 +3,7 @@
 namespace HuseyinFiliz\CustomProfilePage\Api\Controller;
 
 use Flarum\Http\RequestUtil;
+use Flarum\User\User;
 use HuseyinFiliz\CustomProfilePage\Api\Serializer;
 use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
 use Illuminate\Support\Arr;
@@ -18,24 +19,13 @@ class ShowCustomPageController implements RequestHandlerInterface
         $userId = Arr::get($request->getQueryParams(), 'id');
         $actor = RequestUtil::getActor($request);
 
+        User::whereVisibleTo($actor)->findOrFail($userId);
         $page = CustomProfilePage::where('user_id', $userId)->first();
 
-        if (! $page) {
-            return new JsonResponse([
-                'errors' => [
-                    [
-                        'status' => '404',
-                        'code' => 'not_found',
-                        'detail' => 'Custom profile page not found.',
-                    ],
-                ],
-            ], 404);
-        }
-
-        $actor->assertCan('view', $page);
+        $actor->assertCan('view', $page ?? new CustomProfilePage(['user_id' => (int) $userId]));
 
         return new JsonResponse([
-            'data' => Serializer::data($page),
+            'data' => $page ? Serializer::data($page) : null,
         ]);
     }
 }

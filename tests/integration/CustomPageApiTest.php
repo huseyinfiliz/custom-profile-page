@@ -105,6 +105,24 @@ class CustomPageApiTest extends TestCase
         }
     }
 
+    public function test_user_without_a_page_returns_a_successful_empty_response(): void
+    {
+        foreach ([null, 2, 4] as $actor) {
+            $response = $this->callApi('GET', '/users/2/custom-page', $actor);
+            $this->assertSame(200, $response->getStatusCode(), (string) $response->getBody());
+            $this->assertSame(['data' => null], json_decode((string) $response->getBody(), true));
+        }
+        $this->assertFalse($this->database()->table('custom_profile_pages')->where('user_id', 2)->exists());
+    }
+
+    public function test_empty_page_still_checks_user_existence_and_view_permission(): void
+    {
+        $this->database()->table('group_permission')->where('permission', 'user.viewCustomPage')->delete();
+        $this->assertSame(404, $this->callApi('GET', '/users/999/custom-page')->getStatusCode());
+        $this->assertSame(403, $this->callApi('GET', '/users/2/custom-page')->getStatusCode());
+        $this->assertSame(200, $this->callApi('GET', '/users/2/custom-page', 2)->getStatusCode());
+    }
+
     public function test_missing_view_permission_scopes_lists_and_includes(): void
     {
         $this->database()->table('group_permission')->where('permission', 'user.viewCustomPage')->delete();
