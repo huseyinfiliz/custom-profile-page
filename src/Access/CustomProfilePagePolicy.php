@@ -13,7 +13,11 @@ class CustomProfilePagePolicy extends AbstractPolicy
      */
     public function view(User $actor, CustomProfilePage $page)
     {
-        if ($actor->hasPermission('user.viewCustomPage')) {
+        if (! $actor->can('viewForum')) {
+            return $this->deny();
+        }
+
+        if ($actor->hasPermission('user.viewCustomPage') || $actor->hasPermission('user.moderateCustomPage')) {
             return $this->allow();
         }
 
@@ -43,13 +47,13 @@ class CustomProfilePagePolicy extends AbstractPolicy
     /**
      * Sayfa oluşturma yetkisi
      */
-    public function create(User $actor, CustomProfilePage|int $pageOrUserId)
+    public function create(User $actor, CustomProfilePage $page)
     {
         if ($actor->hasPermission('user.moderateCustomPage')) {
             return $this->allow();
         }
 
-        $userId = $pageOrUserId instanceof CustomProfilePage ? $pageOrUserId->user_id : (int) $pageOrUserId;
+        $userId = $page->user_id;
 
         if ($actor->id && $actor->id === $userId && $actor->hasPermission('user.editOwnCustomPage')) {
             return $this->allow();

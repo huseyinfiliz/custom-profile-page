@@ -38,11 +38,17 @@ return [
 
     (new Extend\ModelVisibility(CustomProfilePage::class))
         ->scope(function (User $actor, $query) {
+            if (! $actor->can('viewForum')) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
             if ($actor->hasPermission('user.moderateCustomPage')) {
                 return;
             }
 
-            if (!$actor->hasPermission('user.viewCustomPage')) {
+            if (! $actor->hasPermission('user.viewCustomPage')) {
                 if ($actor->id && $actor->hasPermission('user.editOwnCustomPage')) {
                     $query->where('user_id', $actor->id);
                 } else {
@@ -90,4 +96,8 @@ return [
         ]),
 
     new Extend\ApiResource(CustomProfilePageResource::class),
+
+    (new Extend\SearchDriver(\Flarum\Search\Database\DatabaseSearchDriver::class))
+        ->addSearcher(CustomProfilePage::class, Search\CustomProfilePageSearcher::class)
+        ->addFilter(Search\CustomProfilePageSearcher::class, Search\UserFilter::class),
 ];

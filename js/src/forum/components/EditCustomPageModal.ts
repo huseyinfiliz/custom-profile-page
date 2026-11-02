@@ -22,7 +22,7 @@ export default class EditCustomPageModal extends FormModal<IEditCustomPageModalA
 
     let initialContent = '';
 
-    if (this.attrs.customPage?.content()) {
+    if (this.attrs.customPage) {
       initialContent = this.attrs.customPage.content() || '';
     } else {
       const template = app.forum?.attribute<string>('huseyinfiliz-custom-profile-page.default_template') || '';
@@ -56,7 +56,6 @@ export default class EditCustomPageModal extends FormModal<IEditCustomPageModalA
               className: 'Button Button--primary',
               loading: this.loading,
               disabled: this.loading,
-              onclick: this.onsubmit.bind(this),
             },
             app.translator.trans('huseyinfiliz-custom-profile-page.forum.edit_modal.submit_button')
           ),
@@ -76,18 +75,18 @@ export default class EditCustomPageModal extends FormModal<IEditCustomPageModalA
 
   renderFormatInfo(format: string) {
     let icon = '';
-    let text = '';
+    let text: Mithril.Children = '';
 
     if (format === 'markdown') {
       icon = 'fab fa-markdown';
-      text = 'You can use Markdown formatting: **bold**, *italic*, [link](url), `code`, etc.';
+      text = app.translator.trans('huseyinfiliz-custom-profile-page.forum.edit_modal.markdown_help');
     } else if (format === 'html') {
       const allowedTags = app.forum?.attribute<string>('huseyinfiliz-custom-profile-page.allowed_html_tags') || '';
       icon = 'fab fa-html5';
-      text = `You can use the following HTML tags: ${allowedTags}`;
+      text = app.translator.trans('huseyinfiliz-custom-profile-page.forum.edit_modal.html_help', { tags: allowedTags });
     } else {
       icon = 'fas fa-align-left';
-      text = 'Plain text only. No HTML or Markdown formatting allowed.';
+      text = app.translator.trans('huseyinfiliz-custom-profile-page.forum.edit_modal.text_help');
     }
 
     return m('.Alert.EditCustomPageModal-formatInfo', [m('i.icon', { className: icon }), m('span', text)]);

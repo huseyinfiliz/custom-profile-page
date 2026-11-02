@@ -54,7 +54,7 @@ export default function addUserProfilePage() {
     const canView = app.forum?.attribute('canViewCustomPage');
     const canEdit = app.session.user?.id() === user.id() && app.forum?.attribute('canEditOwnCustomPage');
 
-    if (!canView && !canEdit) {
+    if (!canView && !canEdit && !app.forum?.attribute('canModerateCustomPage')) {
       return;
     }
 

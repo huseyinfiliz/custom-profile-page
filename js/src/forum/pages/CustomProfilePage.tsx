@@ -60,13 +60,19 @@ export default class CustomProfilePage extends UserPage {
 
         let videoId: string | null = null;
 
-        const match1 = url.match(/[?&]v=([^&]+)/);
-        if (match1) videoId = match1[1];
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return;
+          if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(parsed.hostname) && parsed.pathname === '/watch') {
+            videoId = parsed.searchParams.get('v');
+          } else if (parsed.hostname === 'youtu.be') {
+            videoId = parsed.pathname.slice(1);
+          }
+        } catch {
+          return;
+        }
 
-        const match2 = url.match(/youtu\.be\/([^?]+)/);
-        if (match2) videoId = match2[1];
-
-        if (videoId) {
+        if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
           const iframe = document.createElement('iframe');
           iframe.src = `https://www.youtube.com/embed/${videoId}`;
           iframe.width = '560';

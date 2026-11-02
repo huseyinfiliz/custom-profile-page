@@ -29,11 +29,6 @@ class CustomProfilePageResource extends Resource\AbstractDatabaseResource
     {
         $actor = $context->getActor();
         $query->whereVisibleTo($actor);
-
-        $params = $context->request->getQueryParams();
-        if (isset($params['filter']['user'])) {
-            $query->where('user_id', $params['filter']['user']);
-        }
     }
 
     public function endpoints(): array
@@ -44,14 +39,7 @@ class CustomProfilePageResource extends Resource\AbstractDatabaseResource
             Endpoint\Show::make()
                 ->can('view'),
             Endpoint\Create::make()
-                ->can('create')
-                ->before(function (OriginalContext $context) {
-                    $actor = $context->getActor();
-                    $attrs = (array) ($context->body()['data']['attributes'] ?? []);
-                    $userId = $attrs['userId'] ?? $actor->id;
-
-                    $actor->assertCan('create', (int) $userId);
-                }),
+                ->authenticated(),
             Endpoint\Update::make()
                 ->can('update'),
             Endpoint\Delete::make()
@@ -63,10 +51,16 @@ class CustomProfilePageResource extends Resource\AbstractDatabaseResource
     {
         return [
             Schema\Integer::make('userId')
-                ->property('user_id'),
+                ->property('user_id')
+                ->writableOnCreate()
+                ->default(fn (OriginalContext $context) => $context->getActor()->id)
+                ->requiredOnCreate()
+                ->rule('exists:users,id')
+                ->rule('unique:custom_profile_pages,user_id'),
             Schema\Str::make('content')
                 ->nullable()
-                ->writable(),
+                ->writable()
+                ->rule('max:65535'),
             Schema\Str::make('contentHtml')
                 ->get(fn (CustomProfilePage $page) => $page->content_html),
             Schema\DateTime::make('createdAt')
@@ -88,20 +82,10 @@ class CustomProfilePageResource extends Resource\AbstractDatabaseResource
         ];
     }
 
-    public function newModel(OriginalContext $context): object
+    public function create(object $model, OriginalContext $context): object
     {
-        /** @var CustomProfilePage $model */
-        $model = parent::newModel($context);
-        $attrs = (array) ($context->body()['data']['attributes'] ?? []);
-        $actor = $context->getActor();
+        $context->getActor()->assertCan('create', $model);
 
-        $userId = $attrs['userId'] ?? $actor->id;
-        if ($actor->hasPermission('user.moderateCustomPage')) {
-            $model->user_id = (int) $userId;
-        } else {
-            $model->user_id = $actor->id;
-        }
-
-        return $model;
+        return parent::create($model, $context);
     }
 }

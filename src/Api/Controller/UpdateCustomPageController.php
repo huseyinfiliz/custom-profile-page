@@ -5,6 +5,7 @@ namespace HuseyinFiliz\CustomProfilePage\Api\Controller;
 use Flarum\Http\RequestUtil;
 use HuseyinFiliz\CustomProfilePage\Api\Serializer;
 use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
+use HuseyinFiliz\CustomProfilePage\CustomProfilePageValidator;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
@@ -25,6 +26,7 @@ class UpdateCustomPageController implements RequestHandlerInterface
         $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
 
         if (array_key_exists('content', $attributes)) {
+            resolve(CustomProfilePageValidator::class)->assertValid(['content' => $attributes['content']]);
             $page->content = $attributes['content'];
             $page->save();
         }

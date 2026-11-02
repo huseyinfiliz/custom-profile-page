@@ -20,7 +20,7 @@ class ShowCustomPageController implements RequestHandlerInterface
 
         $page = CustomProfilePage::where('user_id', $userId)->first();
 
-        if (!$page) {
+        if (! $page) {
             return new JsonResponse([
                 'errors' => [
                     [

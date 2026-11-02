@@ -7,6 +7,7 @@ use Flarum\Http\RequestUtil;
 use Flarum\User\User;
 use HuseyinFiliz\CustomProfilePage\Api\Serializer;
 use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
+use HuseyinFiliz\CustomProfilePage\CustomProfilePageValidator;
 use Illuminate\Support\Arr;
 use Laminas\Diactoros\Response\JsonResponse;
 use Psr\Http\Message\ResponseInterface;
@@ -22,7 +23,9 @@ class CreateCustomPageController implements RequestHandlerInterface
 
         User::findOrFail($userId);
 
-        $actor->assertCan('create', $userId);
+        $page = new CustomProfilePage();
+        $page->user_id = $userId;
+        $actor->assertCan('create', $page);
 
         $existingPage = CustomProfilePage::where('user_id', $userId)->first();
         if ($existingPage) {
@@ -34,8 +37,7 @@ class CreateCustomPageController implements RequestHandlerInterface
         $attributes = Arr::get($request->getParsedBody(), 'data.attributes', []);
         $content = Arr::get($attributes, 'content', '');
 
-        $page = new CustomProfilePage();
-        $page->user_id = $userId;
+        resolve(CustomProfilePageValidator::class)->assertValid(['content' => $content]);
         $page->content = $content;
         $page->save();
 

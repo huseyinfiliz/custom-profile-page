@@ -4,8 +4,8 @@ namespace HuseyinFiliz\CustomProfilePage;
 
 use Flarum\Database\AbstractModel;
 use Flarum\Database\ScopeVisibilityTrait;
-use Flarum\Foundation\EventGeneratorTrait;
 use Flarum\Formatter\Formatter;
+use Flarum\Foundation\EventGeneratorTrait;
 use Flarum\Settings\SettingsRepositoryInterface;
 use Flarum\User\User;
 
@@ -37,7 +37,7 @@ class CustomProfilePage extends AbstractModel
 
     public function getContentHtmlAttribute(): string
     {
-        if (empty($this->content)) {
+        if ($this->content === null || $this->content === '') {
             return '';
         }
 
@@ -70,9 +70,21 @@ class CustomProfilePage extends AbstractModel
             'huseyinfiliz-custom-profile-page.allowed_html_tags',
             'b,i,u,strong,em,a,br,p,ul,ol,li,blockquote,code,pre'
         );
-        $tags = array_filter(array_map('trim', explode(',', $allowedTags)));
+        $tags = array_filter(array_map('trim', explode(',', strtolower($allowedTags))));
+        // HTMLPurifier validates attributes and URL schemes as well as tag names.
+        $config = \HTMLPurifier_Config::createDefault();
+        $config->set('HTML.AllowedElements', $tags);
+        $attributes = [];
+        if (in_array('a', $tags, true)) {
+            $attributes = ['a.href', 'a.title'];
+        }
+        if (in_array('img', $tags, true)) {
+            $attributes = array_merge($attributes, ['img.src', 'img.alt', 'img.title', 'img.width', 'img.height']);
+        }
+        $config->set('HTML.AllowedAttributes', $attributes);
+        $config->set('Cache.DefinitionImpl', null);
 
-        return strip_tags($html, '<' . implode('><', $tags) . '>');
+        return (new \HTMLPurifier($config))->purify($html);
     }
 
     public function user()
