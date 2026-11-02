@@ -35,7 +35,7 @@ Special thanks to [@Silvestrus](https://discuss.flarum.org/u/silvestrus) for the
 - **Mention** / **Emoji** - User mentions and emojis
 
 ### 📥 Installation
-This branch requires **Flarum 2.0.2+** (2.x) and **PHP 8.3+**. Flarum 1.x releases are maintained on the [`1.x`](https://github.com/huseyinfiliz/custom-profile-page/tree/1.x) branch.
+This branch requires **Flarum 2.0.0+** (2.x) and **PHP 8.3+**. Flarum 1.x releases are maintained on the [`1.x`](https://github.com/huseyinfiliz/custom-profile-page/tree/1.x) branch.
 
 ```sh
 composer require huseyinfiliz/custom-profile-page
