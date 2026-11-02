@@ -71,18 +71,6 @@ To remove simply run `composer remove huseyinfiliz/custom-profile-page`
 - [Packagist](https://packagist.org/packages/huseyinfiliz/custom-profile-page)
 - [Github](https://github.com/huseyinfiliz/custom-profile-page)
 
-### Development checks
-```sh
-composer install
-composer test:setup # Uses a separate SQLite fixture by default, never the forum database
-composer test
-cd js
-yarn install --frozen-lockfile
-yarn format-check
-yarn check-typings
-yarn build
-```
-
 ### 💡 Feedback & Suggestions
 Feel free to share your ideas, report bugs, or request features in the discussion thread!
 
