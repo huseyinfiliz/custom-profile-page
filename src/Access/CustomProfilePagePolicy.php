@@ -9,7 +9,7 @@ use HuseyinFiliz\CustomProfilePage\CustomProfilePage;
 class CustomProfilePagePolicy extends AbstractPolicy
 {
     /**
-     * Permission kontrolü ile görüntüleme
+     * Permission kontrolü ile görüntüleme.
      */
     public function view(User $actor, CustomProfilePage $page)
     {
@@ -29,7 +29,7 @@ class CustomProfilePagePolicy extends AbstractPolicy
     }
 
     /**
-     * Sayfa düzenleme yetkisi
+     * Sayfa düzenleme yetkisi.
      */
     public function update(User $actor, CustomProfilePage $page)
     {
@@ -45,7 +45,7 @@ class CustomProfilePagePolicy extends AbstractPolicy
     }
 
     /**
-     * Sayfa oluşturma yetkisi
+     * Sayfa oluşturma yetkisi.
      */
     public function create(User $actor, CustomProfilePage $page)
     {
@@ -63,7 +63,7 @@ class CustomProfilePagePolicy extends AbstractPolicy
     }
 
     /**
-     * Sayfa silme yetkisi
+     * Sayfa silme yetkisi.
      */
     public function delete(User $actor, CustomProfilePage $page)
     {
